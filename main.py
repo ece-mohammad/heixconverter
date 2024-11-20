@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+"""
+CLI tool that converts and saves HEIC, HEIF images as png, jpg, jpeg files.
+"""
+
 from argparse import ArgumentParser
 from concurrent.futures import (
     ProcessPoolExecutor as ExecPool,
     as_completed
 )
 from pathlib import Path
-from typing import List, Dict, Final
+from typing import List
 
 from tqdm import tqdm
 
@@ -15,11 +19,16 @@ from heixconverter import HEIX
 
 
 class CLI:
+    """
+    CLI for HEXIConverter
+    """
+
     def __init__(self):
         self.parser: ArgumentParser = self.make_parser()
 
     @staticmethod
     def make_parser() -> ArgumentParser:
+        """Initialize a new argument parser"""
         parser = ArgumentParser(
             description="Convert and save HEIX (HEIC, HEIF) images as jpeg, jpg or png images"
         )
@@ -53,6 +62,7 @@ class CLI:
         return Path(new_image_path)
 
     def run(self):
+        """Run CLI """
         args = vars(self.parser.parse_args())
         src_dir: Path = args["src"].absolute()
         dst_dir: Path = args["out"].absolute()
