@@ -2,11 +2,22 @@
 # -*- coding: utf-8 -*-
 
 from argparse import ArgumentParser
+from concurrent.futures import (
+    ProcessPoolExecutor as ExecPool,
+    as_completed
+)
 from pathlib import Path
+from typing import List, Dict, Final
 
 from tqdm import tqdm
 
 from heixconverter import HEIX
+
+FormatConvertedMap: Final[Dict[str, str]] = {
+    "png" : "as_png",
+    "jpg" : "as_jpg",
+    "jpeg": "as_jpeg",
+}
 
 
 class CLI:
@@ -37,6 +48,16 @@ class CLI:
         )
         return parser
 
+    @staticmethod
+    def _worker(dst_dir: Path, image_path: Path, fmt: str) -> Path:
+        heix_image: HEIX = HEIX(image_path)
+        new_image_path: str = str(
+            dst_dir / heix_image.path.with_suffix(f".{fmt}").name
+        )
+        converter = getattr(heix_image, FormatConvertedMap[fmt])
+        converter(new_image_path)
+        return Path(new_image_path)
+
     def run(self):
         args = vars(self.parser.parse_args())
         src_dir: Path = args["src"].absolute()
@@ -50,25 +71,26 @@ class CLI:
             raise ValueError(f"Source directory path: {src_dir} is a file")
 
         if not dst_dir.exists():
-            dst_dir.mkdir()
+            dst_dir.mkdir(parents=True)
 
-        heix_images = [i for i in src_dir.glob("*.hei[cf]")]
-        print(f"Found {len(heix_images)} images.")
-        pbar = tqdm(heix_images)
-        for img_path in pbar:
-            img_path = img_path
-            img_name = img_path.stem
-            dst_img = dst_dir / img_name
-            img = HEIX(Path(img_path))
-            pbar.set_description(f"Converting image: {img_name}")
-            if fmt == "png":
-                img.as_png(f"{dst_img.with_suffix('.png')}")
-
-            elif fmt == "jpeg":
-                img.as_jpeg(f"{dst_img.with_suffix('.jpeg')}")
-
-            else:
-                img.as_jpg(f"{dst_img.with_suffix('.jpg')}")
+        heix_images: List[Path] = [i for i in src_dir.glob("*.hei[cf]")]
+        num_images: int = len(heix_images)
+        print(f"Found {num_images} images.")
+        pbar = tqdm(total=num_images, desc="Progress: ", unit="image")
+        errors = list()
+        with ExecPool() as pool:
+            result_to_image = {
+                pool.submit(self._worker, dst_dir, img, fmt): img
+                for img in heix_images
+            }
+            for res in as_completed(result_to_image):
+                img = result_to_image[res]
+                try:
+                    res.result()
+                except Exception as exc:
+                    errors.append(img)
+                else:
+                    pbar.update(1)
 
 
 def main():

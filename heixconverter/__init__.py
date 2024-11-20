@@ -73,14 +73,14 @@ class HEIX:
         else:
             self.image.save(name, fmt)
 
-    def as_jpeg(self, name) -> None:
+    def as_jpeg(self, name: str) -> None:
         """Save image as JPEG """
         return self._save_as(name, "JPEG")
 
-    def as_jpg(self, name) -> None:
+    def as_jpg(self, name: str) -> None:
         """Save image as JPG"""
         return self._save_as(name, "JPEG")
 
-    def as_png(self, name) -> None:
+    def as_png(self, name: str) -> None:
         """Save image as PNG"""
         return self._save_as(name, "PNG")
