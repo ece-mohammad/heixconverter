@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "heixconverter"
+version = "0.1.0"
+description = "Convert HEIC, HEIF images to other frmats (jpg, jpeg, png)"
+authors = ["ece-mohammad <kuro.ece@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+pillow = "^11.0.0"
+pyheif = "^0.8.0"
+tqdm = "^4.67.0"
+pyqt5 = "^5.15.11"
+
+
+[tool.poetry.group.dev.dependencies]
+ipython = "^8.29.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
