@@ -13,12 +13,6 @@ from tqdm import tqdm
 
 from heixconverter import HEIX
 
-FormatConvertedMap: Final[Dict[str, str]] = {
-    "png" : "as_png",
-    "jpg" : "as_jpg",
-    "jpeg": "as_jpeg",
-}
-
 
 class CLI:
     def __init__(self):
@@ -54,7 +48,7 @@ class CLI:
         new_image_path: str = str(
             dst_dir / heix_image.path.with_suffix(f".{fmt}").name
         )
-        converter = getattr(heix_image, FormatConvertedMap[fmt])
+        converter = getattr(heix_image, HEIX.FormatConvertedMap[fmt])
         converter(new_image_path)
         return Path(new_image_path)
 

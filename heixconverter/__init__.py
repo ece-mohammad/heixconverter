@@ -23,6 +23,11 @@ class HEIX:
         "JPEG": {"transparency": False, },
         "PNG" : {"transparency": True, },
     }
+    FormatConvertedMap: Final[Dict[str, str]] = {
+        "png" : "as_png",
+        "jpg" : "as_jpg",
+        "jpeg": "as_jpeg",
+    }
 
     def __init__(self, path: Path):
         """
