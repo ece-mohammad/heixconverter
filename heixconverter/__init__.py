@@ -19,14 +19,10 @@ class HEIX:
     A thin wrapper over Image.Image to save heic, heif images as other formats.
     """
     SupportedExtensions: Final[Tuple[str]] = (".heic", ".heif")
-    SupportedFormats: Final[Dict[str, Any]] = {
-        "JPEG": {"transparency": False, },
-        "PNG" : {"transparency": True, },
-    }
-    FormatConvertedMap: Final[Dict[str, str]] = {
-        "png" : "as_png",
-        "jpg" : "as_jpg",
-        "jpeg": "as_jpeg",
+    SupportedFormats: Final[Dict[str, Dict[str, Any]]] = {
+        "png" : {"codec": "PNG", "transparency": True},
+        "jpg" : {"codec": "JPEG", "transparency": False},
+        "jpeg": {"codec": "JPEG", "transparency": False},
     }
 
     def __init__(self, path: Path):
@@ -38,18 +34,13 @@ class HEIX:
         :raises OSError: If the given image path doesn't exist, or not a file.
         :raises ValueError: If the image's suffix isn't heic or heif.
         """
+        if not path.exists():
+            raise OSError(f"File {path} does not exist")
+
+        if not path.is_file():
+            raise OSError(f"file {path} is not a file")
+
         self.path: Path = path
-        if not self.path.exists():
-            raise OSError(f"File {self.path} does not exist")
-
-        if not self.path.is_file():
-            raise OSError(f"file {self.path} is not a file")
-
-        if self.path.suffix not in self.SupportedExtensions:
-            raise ValueError(
-                f"Unsupported image type: {self.path.suffix}. "
-                f"Supported formats: {self.SupportedExtensions}"
-            )
         heix: pyheif.HeifImage = pyheif.read(self.path)
         self.image = Image.frombytes(
             heix.mode,
@@ -60,32 +51,24 @@ class HEIX:
             heix.stride
         )
 
-    def _save_as(self, name: str, fmt: str) -> None:
+    def save_as(self, dst_dir: Path, fmt: str) -> Path:
         """
         save image as a different format (jpg, jpeg, or png).
 
-        :param name: name (or path) of the new image
-        :type name: str
-        :param fmt: new image format, one of jpg, jpeg, png
+        :param dst_dir: directory to save image to
+        :type dst_dir: Path
+        :param fmt: format to save image as (jpg, jpeg, png)
         :type fmt: str
         """
-        if fmt not in self.SupportedFormats:
-            raise ValueError(f"Unsupported format: {fmt}")
+        if not fmt in self.SupportedFormats:
+            raise ValueError(f"Unsupported conversion format: {fmt}")
 
-        if not self.SupportedFormats[fmt]["transparency"] and self.image.mode == "RGBA":
+        codec = self.SupportedFormats[fmt]["codec"]
+        alpha_support = self.SupportedFormats[fmt]["transparency"]
+        new_name = dst_dir / self.path.with_suffix(f".{fmt}").name
+        if self.image.mode == "RGBA" and not alpha_support:
             img = self.image.convert("RGB")
-            img.save(name, fmt)
+            img.save(str(new_name), codec)
         else:
-            self.image.save(name, fmt)
-
-    def as_jpeg(self, name: str) -> None:
-        """Save image as JPEG """
-        return self._save_as(name, "JPEG")
-
-    def as_jpg(self, name: str) -> None:
-        """Save image as JPG"""
-        return self._save_as(name, "JPEG")
-
-    def as_png(self, name: str) -> None:
-        """Save image as PNG"""
-        return self._save_as(name, "PNG")
+            self.image.save(str(new_name), codec)
+        return new_name

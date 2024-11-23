@@ -10,7 +10,7 @@ python = "^3.11"
 pillow = "^11.0.0"
 pyheif = "^0.8.0"
 tqdm = "^4.67.0"
-pyqt5 = "^5.15.11"
+pyqt6 = "^6.7.1"
 
 
 [tool.poetry.group.dev.dependencies]
